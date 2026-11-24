@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browser frame-rate check</title>
+<style>
+  body { font: 18px system-ui; max-width: 720px; margin: 64px auto; padding: 24px; }
+  output { display: block; font-size: 36px; margin: 24px 0; }
+</style>
+<h1>Browser frame-rate check</h1>
+<p>This page measures animation callbacks with no simulation, WebGPU rendering, or AI work. Keep it visible on the same display as the simulation.</p>
+<output id="rate" aria-live="polite">Measuring…</output>
+<p id="explanation"></p>
+<p>A lightweight page near 75fps points to browser/display pacing. If this page reaches 120fps but the simulation does not, investigate simulation and rendering cost.</p>
+<a href="/">Back to simulation</a>
+<script>
+  const rate = document.getElementById('rate');
+  const explanation = document.getElementById('explanation');
+  let start;
+  let frames = 0;
+  document.addEventListener('visibilitychange', () => { start = undefined; frames = 0; });
+  function sample(now) {
+    if (!document.hidden) {
+      if (start === undefined) start = now;
+      else frames++;
+      if (now - start >= 3000) {
+        const fps = frames * 1000 / (now - start);
+        rate.textContent = `${fps.toFixed(1)} animation frames / second`;
+        explanation.textContent = fps >= 115
+          ? 'The browser is currently delivering enough callbacks for approximately 120fps or more.'
+          : 'The browser is currently delivering fewer than 120 callbacks per second even without the simulation. Check display refresh rate and browser/power settings.';
+        start = now;
+        frames = 0;
+      }
+    }
+    requestAnimationFrame(sample);
+  }
+  requestAnimationFrame(sample);
+</script>
+</html>
